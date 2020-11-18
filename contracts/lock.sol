@@ -4,9 +4,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./Receipts.sol";
 
-
-contract LockMapping is Ownable {
+contract LockMapping is Ownable, Receipts {
     using SafeMath for uint256;
     using SafeERC20 for ERC20;
 
@@ -14,36 +14,9 @@ contract LockMapping is Ownable {
 
     address public asset;
 	ERC20 token;
-    uint256 public saveTime = 86400 * 15; //15 days;
-    uint256 public receiptCount = 0;
+    uint256 public saveTime = 1 days;
 
-    struct Receipt {
-        address asset;
-        address owner;
-        string targetAddress;
-        uint256 amount;
-        uint256 startTime;
-        uint256 endTime;
-        bool finished;
-    }
-
-    Receipt[] public receipts;
-
-    mapping(uint256 => address) private receiptToOwner;
-    mapping(address => uint256[]) private ownerToReceipts;
-
-
-    modifier exceedEndtime(uint256 _id) {
-
-        require(receipts[_id].endTime != 0 && receipts[_id].endTime <= now);
-        _;
-    }
-
-    modifier notFinished(uint256 _id) {
-
-        require(receipts[_id].finished == false);
-        _;
-    }
+    mapping(address => uint256[]) public ownerToReceipts;
 
 	constructor (ERC20 _token) public{
 		asset = address(_token);
@@ -62,8 +35,7 @@ contract LockMapping is Ownable {
 
         receipts.push(Receipt(_asset, _owner, _targetAddress, _amount, _startTime, _endTime, _finished));
         receiptCount = receipts.length;
-        uint256 id = receiptCount - 1;
-        receiptToOwner[id] = msg.sender;
+        uint256 id = receiptCount.sub(1);
         ownerToReceipts[msg.sender].push(id);
         emit NewReceipt(id, _asset, _owner, _endTime);
     }
@@ -73,14 +45,20 @@ contract LockMapping is Ownable {
     function createReceipt(uint256 _amount, string calldata _targetAddress) external {
         //deposit token to this contract
         token.safeTransferFrom(msg.sender, address(this), _amount);
-        _createReceipt(asset, msg.sender, _targetAddress, _amount, now, now + saveTime, false);
+        _createReceipt(asset, msg.sender, _targetAddress, _amount, now, now.add(saveTime), false);
     }
 
     //finish the receipt and withdraw bonus and token
-    function finishReceipt(uint256 _id) external notFinished(_id) exceedEndtime(_id) {
+    function finishReceipt(uint256 _id) external {
         // only receipt owner can finish receipt
-        require(msg.sender == receipts[_id].owner);
-        token.safeTransfer(receipts[_id].owner, receipts[_id].amount);
+        Receipt memory receipt = receipts[_id];
+        require(msg.sender == receipt.owner, "[LOCK]Not receipt owner.");
+        // exceeding time period
+        require(receipt.endTime != 0 && receipt.endTime <= now, "[LOCK]Unable to finish receipt before endtime.");
+        // not yet finished
+        require(receipt.finished == false, "[LOCK]Already finished.");
+
+        token.safeTransfer(receipt.owner, receipt.amount);
         receipts[_id].finished = true;
     }
 
@@ -90,12 +68,12 @@ contract LockMapping is Ownable {
     }
 
     function getLockTokens(address _address) external view returns (uint256){
-        uint256[] memory myReceipts = ownerToReceipts[_address != address(0) ? _address : msg.sender];
+        uint256[] memory myReceipts = ownerToReceipts[_address];
         uint256 amount = 0;
 
         for (uint256 i = 0; i < myReceipts.length; i++) {
             if (receipts[myReceipts[i]].finished == false) {
-                amount += receipts[myReceipts[i]].amount;
+                amount = amount.add(receipts[myReceipts[i]].amount);
             }
         }
 
