@@ -57,6 +57,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree[1].toString(), '0'); // first receipt id
         assert.equal(tree[2].toString(), '1'); // receipt count
         assert.equal(tree[3].toString(), '3'); // tree size
+        assert.equal(tree[4].length, 3); //tree node length
 
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[2]);
@@ -91,6 +92,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree[1].toString(), '0'); // first receipt id
         assert.equal(tree[2], 2); // receipt count
         assert.equal(tree[3], 3); // tree size
+        assert.equal(tree[4].length, 3); //tree node length
 
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[2]);
@@ -142,6 +144,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree[1].toString(), '0'); // first receipt id
         assert.equal(tree[2], 3); // receipt count
         assert.equal(tree[3], 7); // tree size
+        assert.equal(tree[4].length, 7); //tree node length
 
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[6]);

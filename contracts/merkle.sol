@@ -125,7 +125,7 @@ contract MerkleTreeGenerator is Ownable {
         for (uint256 t = 0; t < nodeCount; t++) {
             treeNodes[t] = allNodes[t];
         }
-        return (merkleTree, allNodes);
+        return (merkleTree, treeNodes);
     }
 
     function _generatePath(MerkleTree memory _merkleTree, uint256 _index, uint256 treeMaximalSize) private view returns (uint256, bytes32[pathMaximalLength] memory, bool[pathMaximalLength] memory){
