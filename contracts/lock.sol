@@ -10,17 +10,19 @@ contract LockMapping is Ownable, Receipts {
     using SafeMath for uint256;
     using SafeERC20 for ERC20;
 
-    event NewReceipt(uint256 receiptId, address asset, address owner, uint256 endTime);
+    event NewReceipt(uint256 receiptId, address asset, address owner, uint256 amount, uint256 endTime);
+    event ReceiptFinished(uint256 receiptId, address asset, address owner, uint256 amount, uint256 finishTime);
 
     address public asset;
 	ERC20 token;
-    uint256 public saveTime = 1 days;
+    uint256 public lockTime;
 
     mapping(address => uint256[]) public ownerToReceipts;
 
-	constructor (ERC20 _token) public{
+	constructor (ERC20 _token, uint256 _lockTime) public{
 		asset = address(_token);
 		token = _token;
+        lockTime = _lockTime;
 	}
 
 	function _createReceipt(
@@ -37,7 +39,7 @@ contract LockMapping is Ownable, Receipts {
         receiptCount = receipts.length;
         uint256 id = receiptCount.sub(1);
         ownerToReceipts[msg.sender].push(id);
-        emit NewReceipt(id, _asset, _owner, _endTime);
+        emit NewReceipt(id, _asset, _owner, _amount, _endTime);
     }
 
 
@@ -45,7 +47,7 @@ contract LockMapping is Ownable, Receipts {
     function createReceipt(uint256 _amount, string calldata _targetAddress) external {
         //deposit token to this contract
         token.safeTransferFrom(msg.sender, address(this), _amount);
-        _createReceipt(asset, msg.sender, _targetAddress, _amount, now, now.add(saveTime), false);
+        _createReceipt(asset, msg.sender, _targetAddress, _amount, now, now.add(lockTime), false);
     }
 
     //finish the receipt and withdraw bonus and token
@@ -60,6 +62,7 @@ contract LockMapping is Ownable, Receipts {
 
         token.safeTransfer(receipt.owner, receipt.amount);
         receipts[_id].finished = true;
+        emit ReceiptFinished(_id, asset, receipt.owner, receipt.amount, now);
     }
 
     function getMyReceipts(address _address) external view returns (uint256[] memory){
@@ -81,7 +84,7 @@ contract LockMapping is Ownable, Receipts {
     }
 
     function fixSaveTime(uint256 _period) external onlyOwner {
-        saveTime = _period;
+        lockTime = _period;
     }
 
     function getReceiptInfo(uint256 index) public view returns (bytes32, string memory, uint256, bool){
