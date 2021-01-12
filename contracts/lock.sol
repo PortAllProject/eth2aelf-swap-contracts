@@ -34,8 +34,8 @@ contract LockMapping is Ownable, Receipts {
         uint256 _endTime,
         bool _finished
     ) internal {
-
         receipts.push(Receipt(_asset, _owner, _targetAddress, _amount, _startTime, _endTime, _finished));
+        totalAmountInReceipts = totalAmountInReceipts.add(_amount);
         receiptCount = receipts.length;
         uint256 id = receiptCount.sub(1);
         ownerToReceipts[msg.sender].push(id);
@@ -61,6 +61,7 @@ contract LockMapping is Ownable, Receipts {
         require(receipt.finished == false, "[LOCK]Already finished.");
 
         token.safeTransfer(receipt.owner, receipt.amount);
+        totalAmountInReceipts = totalAmountInReceipts.sub(receipt.amount);
         receipts[_id].finished = true;
         emit ReceiptFinished(_id, asset, receipt.owner, receipt.amount, now);
     }

@@ -13,4 +13,5 @@ contract Receipts {
 
     uint256 public receiptCount = 0;
     Receipt[] public receipts;
+    uint256 public totalAmountInReceipts = 0;
 }
