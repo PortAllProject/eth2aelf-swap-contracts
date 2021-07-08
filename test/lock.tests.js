@@ -12,12 +12,11 @@ contract("LOCK", (accounts) => {
     let owner = accounts[0];
     beforeEach(async () => {
         this.token = await TOKEN.new('TOKEN', 'T', {from: owner});
-        this.locker = await LOCK.new(this.token.address, 10, {from: owner});
+        this.locker = await LOCK.new(this.token.address, {from: owner});
     });
 
     it("constructor", async () => {
         assert.equal(await this.locker.asset.call(), this.token.address);
-        assert.equal(await this.locker.lockTime.call(), 10);
     });
 
     it("createReceipt without allowance", async () => {
@@ -25,11 +24,15 @@ contract("LOCK", (accounts) => {
     });
 
     it("createReceipt with allowance", async () => {
+        // Approve 100 TOKEN to LockMapping Contract
         await this.token.approve(this.locker.address, '100', {from: owner});
         await expectRevert(this.locker.createReceipt('101', 'CREATE', {from: owner}), "ERC20: transfer amount exceeds allowance.");
+        // Create receipt and deposit 100 TOKEN to LockMapping Contract
         await this.locker.createReceipt('100', 'CREATE', {from: owner});
+
         let receiptCount = await this.locker.receiptCount.call();
         assert.equal(receiptCount, 1);
+
         let myReceipts = await this.locker.getMyReceipts.call(owner);
         assert.equal(myReceipts.length, 1);
         assert.equal(myReceipts[0], 0);
@@ -43,7 +46,6 @@ contract("LOCK", (accounts) => {
 
         assert.equal(receiptInfo[0].substring(2), receiptIdHashInHex);
     });
-
 
     it("createReceipt multi times", async () => {
         await this.token.approve(this.locker.address, '100', {from: owner});
@@ -77,7 +79,6 @@ contract("LOCK", (accounts) => {
             assert.equal(receiptInfo[0].substring(2), receiptIdHashInHex);
             assert.equal(receiptInfo[1], targetAddress);
             assert.equal(receiptInfo[2], amount);
-            assert.equal(receiptInfo[3], false);
         }
 
         {
@@ -118,7 +119,6 @@ contract("LOCK", (accounts) => {
             assert.equal(receiptInfo[0].substring(2), receiptIdHashInHex);
             assert.equal(receiptInfo[1], targetAddress);
             assert.equal(receiptInfo[2], amount);
-            assert.equal(receiptInfo[3], false);
         }
 
         {
@@ -150,59 +150,6 @@ contract("LOCK", (accounts) => {
             assert.equal(receiptInfo[0].substring(2), receiptIdHashInHex);
             assert.equal(receiptInfo[1], targetAddress);
             assert.equal(receiptInfo[2], amount);
-            assert.equal(receiptInfo[3], false);
-        }
-    });
-
-    it("finishReceipt", async () => {
-        await this.token.approve(this.locker.address, '100', {from: owner});
-
-        var targetAddress = 'CREATE1';
-        var amount = 30;
-        let create = await this.locker.createReceipt(amount, targetAddress, {from: owner});
-        let receiptId = 0;
-        truffleAssert.eventEmitted(create, 'NewReceipt', (res) => {
-            receiptId = res.receiptId.toNumber();
-            return res.receiptId.toNumber() === 0
-                && res.asset === this.token.address
-                && res.amount.toNumber() === amount
-                && res.owner === owner;
-        });
-        {
-            let receiptCount = await this.locker.receiptCount.call();
-            assert.equal(receiptCount, 1);
-            let myReceipts = await this.locker.getMyReceipts.call(owner);
-            assert.equal(myReceipts.length, 1);
-            assert.equal(myReceipts[0], receiptId);
-
-            let lockedToken = await this.locker.getLockTokens.call(owner);
-            assert.equal(lockedToken, amount);
-
-            let receiptInfo = await this.locker.getReceiptInfo.call(receiptId);
-            assert.equal(receiptInfo[3], false);
-        }
-
-        await sleep(10000);
-        let finish = await this.locker.finishReceipt(0, {from: owner});
-        truffleAssert.eventEmitted(finish, 'ReceiptFinished', (res) => {
-            return res.receiptId.toNumber() === 0
-                && res.asset === this.token.address
-                && res.amount.toNumber() === amount
-                && res.owner === owner;
-        });
-
-        {
-            let receiptCount = await this.locker.receiptCount.call();
-            assert.equal(receiptCount, 1);
-            let myReceipts = await this.locker.getMyReceipts.call(owner);
-            assert.equal(myReceipts.length, 1);
-            assert.equal(myReceipts[0], receiptId);
-
-            let lockedToken = await this.locker.getLockTokens.call(owner);
-            assert.equal(lockedToken, 0);
-
-            let receiptInfo = await this.locker.getReceiptInfo.call(receiptId);
-            assert.equal(receiptInfo[3], true);
         }
     });
 })

@@ -2,13 +2,10 @@ pragma solidity 0.6.12;
 
 contract Receipts {
     struct Receipt {
-        address asset;
-        address owner;
-        string targetAddress;
-        uint256 amount;
-        uint256 startTime;
-        uint256 endTime;
-        bool finished;
+        address asset;// ERC20 Token Address
+        address owner;// Sender
+        string targetAddress;// User address in aelf
+        uint256 amount;// Locking amount
     }
 
     uint256 public receiptCount = 0;
