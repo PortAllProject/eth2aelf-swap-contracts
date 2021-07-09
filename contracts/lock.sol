@@ -5,24 +5,29 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./Receipts.sol";
+import "../interfaces/ITakeToken.sol";
 
-contract LockMapping is Ownable, Receipts {
+contract LockMapping is Ownable, Receipts, ITakeToken {
     using SafeMath for uint256;
     using SafeERC20 for ERC20;
 
     event NewReceipt(uint256 receiptId, address asset, address owner, uint256 amount);
+    event TokenTaken(address receiverAddress, uint256 amount);
 
     address public asset;
-	ERC20 token;
+    address public controller;// Should be the TokenSwap Contract address
+    ERC20 token;
+    uint256 takeAmount;
 
     mapping(address => uint256[]) public ownerToReceipts;
 
-	constructor (ERC20 _token) public{
-		asset = address(_token);
-		token = _token;
-	}
+    constructor (ERC20 _token, address _controller) public{
+        asset = address(_token);
+        token = _token;
+        controller = _controller;
+    }
 
-	function _createReceipt(
+    function _createReceipt(
         address _asset,
         address _owner,
         string calldata _targetAddress,
@@ -62,5 +67,12 @@ contract LockMapping is Ownable, Receipts {
     function getReceiptInfo(uint256 index) public view returns (bytes32, string memory, uint256){
         string memory targetAddress = receipts[index].targetAddress;
         return (sha256(abi.encode(index)), targetAddress, receipts[index].amount);
+    }
+
+    function takeToken(uint256 _amount) external override {
+        require(msg.sender == controller, "unauthorized");
+        takeAmount = takeAmount.add(_amount);
+        token.safeTransfer(msg.sender, _amount);
+        emit TokenTaken(msg.sender, _amount);
     }
 }
