@@ -11,11 +11,9 @@ contract LockMapping is Ownable, Receipts {
     using SafeERC20 for ERC20;
 
     event NewReceipt(uint256 receiptId, address asset, address owner, uint256 amount);
-    event TokenTaken(address receiverAddress, uint256 amount);
 
     address public asset;
     ERC20 token;
-    uint256 takeAmount;
 
     mapping(address => uint256[]) public ownerToReceipts;
 
