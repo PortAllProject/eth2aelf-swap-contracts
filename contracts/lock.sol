@@ -13,6 +13,7 @@ contract LockMapping is Ownable, Receipts, ITakeToken {
 
     event NewReceipt(uint256 receiptId, address asset, address owner, uint256 amount);
     event TokenTaken(address receiverAddress, uint256 amount);
+    event ControllerChanged(address newController);
 
     address public asset;
     address public controller;// Should be the TokenSwap Contract address
@@ -74,5 +75,11 @@ contract LockMapping is Ownable, Receipts, ITakeToken {
         takeAmount = takeAmount.add(_amount);
         token.safeTransfer(msg.sender, _amount);
         emit TokenTaken(msg.sender, _amount);
+    }
+
+    function changeController(address newController) external override {
+        require(msg.sender == controller, "unauthorized");
+        controller = newController;
+        emit ControllerChanged(newController);
     }
 }
