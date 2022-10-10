@@ -1,0 +1,21 @@
+jobs:
+  # All tasks on Linux
+  - job: build_all_linux
+    displayName: Build all tasks (Linux)
+    timeoutInMinutes: 120
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - task: Npm@1
+        inputs:
+          command: 'install'
+        displayName: npm install
+      # - script: npm install --save-dev solidity-coverage@beta
+      #   displayName: 'install solidity-coverage'
+      - script: npx truffle run coverage
+        displayName: 'test'
+      - script: |
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov -t $CODECOV_TOKEN
+        displayName: 'upload to codecov'
