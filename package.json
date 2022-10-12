@@ -9,6 +9,9 @@
     "ganache": "^7.1.0",
     "truffle": "5.5.28"
   },
+  "scripts": {
+    "ganache": "ganache --wallet.seed myCustomSeed"
+  },
   "devDependencies": {
     "solidity-coverage": "0.8.0-beta.1",
     "truffle-plugin-verify": "^0.5.7"

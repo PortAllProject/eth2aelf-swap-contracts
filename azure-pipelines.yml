@@ -10,7 +10,9 @@ jobs:
         inputs:
           command: 'install'
         displayName: npm install
-      - script: npx truffle test
+      - script: 
+        npx run ganache
+        npx truffle test
         displayName: 'test'
 
   # All tasks on Linux
