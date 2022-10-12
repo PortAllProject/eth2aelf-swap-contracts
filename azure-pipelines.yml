@@ -10,7 +10,7 @@ jobs:
         inputs:
           command: 'install'
         displayName: npm install
-      - script: npx run ganache
+      - script: npm run ganache
       - script: npx truffle test
         displayName: 'test'
 
@@ -45,6 +45,8 @@ jobs:
       - task: Npm@1
         inputs:
           command: 'install'
+          
         displayName: npm install
+      - script: npm run ganache
       - script: npx truffle test
         displayName: 'test'
