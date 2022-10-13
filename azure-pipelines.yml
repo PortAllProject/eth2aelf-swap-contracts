@@ -10,9 +10,7 @@ jobs:
         inputs:
           command: 'install'
         displayName: npm install
-      - script: PowerShell.exe -file scripts/ganache-windows.ps1
-        displayName: 'Start an ganache'
-      - script: npx truffle test
+      - script: npx truffle run coverage
         displayName: 'test'
 
   # All tasks on Linux
@@ -48,7 +46,5 @@ jobs:
           command: 'install'
           
         displayName: npm install
-      - script: cd scripts && bash ganache-macOS.sh 
-        displayName: 'Start an ganache'
-      - script: npx truffle test
+      - script: npx truffle run coverage
         displayName: 'test'
