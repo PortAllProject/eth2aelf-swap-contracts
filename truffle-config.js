@@ -9,9 +9,9 @@ module.exports = {
         development: {
             host: "127.0.0.1",
             network_id: "*",
-            port: 7545,
-            gas: 8000000,
-            gasPrice: 10000000000, // 10 gwei
+            port: 8545,
+            // gas: 8000000,
+            // gasPrice: 10000000000, // 10 gwei
         },
     },
 
@@ -28,4 +28,7 @@ module.exports = {
             // }
         },
     },
+    plugins: [
+        'truffle-plugin-verify', 'solidity-coverage'
+    ],
 };
